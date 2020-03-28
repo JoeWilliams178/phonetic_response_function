@@ -1,0 +1,257 @@
+{
+  "phonemes":
+    {
+      "consonants": [
+        {
+          "phoneme": "p",
+          "manner":"plosive",
+          "place": "bilabial",
+          "voicing": "voiceless",
+          "ipa": "\u0070"
+        },
+        {
+          "phoneme": "b",
+          "manner":"plosive",
+          "place": "bilabial",
+          "voicing": "voiced",
+          "ipa": "\u0062"
+        },
+        {
+          "phoneme": "t",
+          "manner":"plosive",
+          "place": "lingua-alveolar",
+          "voicing": "voiceless",
+          "ipa": "\u0074"
+        },
+        {
+          "phoneme": "d",
+          "manner":"plosive",
+          "place": "lingua-alveolar",
+          "voicing": "voiced",
+          "ipa": "\u0064"
+        },
+        {
+          "phoneme": "k",
+          "manner":"plosive",
+          "place": "lingua-velar",
+          "voicing": "voiceless",
+          "ipa": "\u006B"
+        },
+        {
+          "phoneme": "g",
+          "manner":"plosive",
+          "place": "lingua-velar",
+          "voicing": "voiced",
+          "ipa": "\u0261"
+        },
+        {
+          "phoneme": "f",
+          "manner":"fricative",
+          "place": "labio-dental",
+          "voicing": "voiceless",
+          "ipa": "\u0066"
+        },
+        {
+          "phoneme": "v",
+          "manner":"fricative",
+          "place": "labio-dental",
+          "voicing": "voiced",
+          "ipa": "\u0076"
+        },
+        {
+          "phoneme": "th",
+          "manner": "fricative",
+          "place": "lingua-dental",
+          "voicing": "voiceless",
+          "ipa": "\u03B8"
+        },
+        {
+          "phoneme": "dh",
+          "manner":"fricative",
+          "place": "lingua-dental",
+          "voicing": "voiced",
+          "ipa": "\u00F0"
+        },
+        {
+          "phoneme": "s",
+          "manner":"fricative",
+          "place": "lingua-alveolar",
+          "voicing": "voiceless",
+          "ipa": "\u0073"
+        },
+        {
+          "phoneme": "z",
+          "manner":"fricative",
+          "place": "lingua-alveolar",
+          "voicing": "voiced",
+          "ipa": "\u007A"
+        },
+        {
+          "phoneme": "sh",
+          "manner":"fricative",
+          "place": "lingua-palatal",
+          "voicing": "voiceless",
+          "ipa": "\u0283"
+        },
+        {
+          "phoneme": "zh",
+          "manner":"fricative",
+          "place": "lingua-palatal",
+          "voicing": "voiced",
+          "ipa": "\u0292"
+        },
+        {
+          "phoneme": "hh",
+          "manner":"fricative",
+          "place": "glottal",
+          "voicing": "voiceless",
+          "ipa": "\u0068"
+        },
+        {
+          "phoneme": "ch",
+          "manner":"affricate",
+          "place": "lingua-alveolar",
+          "voicing": "voiceless",
+          "ipa": "\u02A7"
+        },
+        {
+          "phoneme": "jh",
+          "manner":"affricate",
+          "place": "lingua-alveolar",
+          "voicing": "voiced",
+          "ipa": "\u02A4"
+        },
+        {
+          "phoneme": "m",
+          "manner":"nasal",
+          "place": "bilabial",
+          "voicing": "voiced",
+          "ipa": "\u006D"
+        },
+        {
+          "phoneme": "n",
+          "manner":"nasal",
+          "place": "lingua-alveolar",
+          "voicing": "voiced",
+          "ipa": "\u006E"
+        },
+        {
+          "phoneme": "ng",
+          "manner":"nasal",
+          "place": "lingua-velar",
+          "voicing": "voiced",
+          "ipa": "\u014B"
+        },
+        {
+          "phoneme": "l",
+          "manner":"liquid",
+          "place": "lingua-alveolar",
+          "voicing": "voiced",
+          "ipa": "\u026D"
+        },
+        {
+          "phoneme": "r",
+          "manner":"liquid",
+          "place": "lingua-palatal",
+          "voicing": "voiced",
+          "ipa": "\u0072"
+        },
+        {
+          "phoneme": "w",
+          "manner":"glide",
+          "place": "bilabial",
+          "voicing": "voiced",
+          "ipa": "\u0077"
+        },
+        {
+          "phoneme": "y",
+          "manner":"glide",
+          "place": "lingua-palatal",
+          "voicing": "voiced",
+          "ipa": "\u006A"
+        }
+      ],
+      "vowels": [
+        {
+          "phoneme": "iy",
+          "backness": "front",
+          "ipa": "\u0069"
+        },
+        {
+          "phoneme": "ih",
+          "backness": "front",
+          "ipa": "\u026A"
+        },
+        {
+          "phoneme": "eh",
+          "backness": "front",
+          "ipa": "\u025B"
+        },
+        {
+          "phoneme": "ae",
+          "backness": "front",
+          "ipa": "\u00E6"
+        },
+        {
+          "phoneme": "aa",
+          "backness": "front",
+          "ipa": "\u0251"
+        },
+        {
+          "phoneme": "ao",
+          "backness": "central",
+          "ipa": "\u028C"
+        },
+        {
+          "phoneme": "ax",
+          "backness": "central",
+          "ipa": "\u0259"
+        },
+        {
+          "phoneme": "er",
+          "backness": "central",
+          "ipa": "\u025D"
+        },
+        {
+          "phoneme": "uw",
+          "backness": "back",
+          "ipa": "\u0075"
+        },
+        {
+          "phoneme": "uh",
+          "backness": "back",
+          "ipa": "\u028A"
+        },
+        {
+          "phoneme": "ow",
+          "backness": "back",
+          "ipa": "\u006F"
+        },
+        {
+          "phoneme": "ah",
+          "backness": "back",
+          "ipa": "\u0254"
+        },
+        {
+          "phoneme": "ay",
+          "backness": "diphthong",
+          "ipa": "\u0251\u026A"
+        },
+        {
+          "phoneme": "aw",
+          "backness": "diphthong",
+          "ipa": "\u0251\u028A"
+        },
+        {
+          "phoneme": "oy",
+          "backness": "diphthong",
+          "ipa": "\u0254\u026A"
+        },
+        {
+          "phoneme": "ey",
+          "backness": "diphthong",
+          "ipa": "\u0065\u026A"
+        }
+      ]
+    }
+}
