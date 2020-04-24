@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
-import scipy.io.wavfile
+import scipy.io.wavfile as wav
 import numpy as np
 import json
 from phonetic_data import PhoneData
 from phonetic_extraction import PhoneExtract
+from scipy import signal
 
 
 class PhoneInfo:
@@ -15,8 +16,8 @@ class PhoneInfo:
         features_array = binary array for each feature. The array length will be equal to the number of sampling points
         """
         self.phone_info = []
-        self.phoneme_array = []
-        self.features_array = []
+        self.phoneme_array = None
+        self.features_array = None
 
     def phoneme_information(self, trial):
         """reads the json file containing the phonetic information associated with the trial
@@ -61,15 +62,27 @@ class PhoneInfo:
             self.phone_info.append([start, end, phoneme])
 
     def calculate_var_array(self, time_array, phone_data, features):
+        """reads through the phonemes in the input word extracting the start, end and name of each phoneme
+
+            arguments and variables:
+            word: a word extracted from the audio_signal
+            no_of_phonemes: the number of phonemes in the word being assessed
+            start: the starting time of the phoneme in seconds
+            end: the end time in seconds of the phoneme
+            phoneme: the name of the phoneme currently being assessed
+            """
 
         phone_extract = PhoneExtract()
 
 
-        phoneme_variable_arrays = np.array([[0] * len(time_array)] * len(phone_data))
-        features_variable_arrays = np.array([[0] * len(time_array)] * len(features))
+        phoneme_variable_arrays = np.zeros(shape=(len(phone_data), len(time_array)))
+        print('here',phoneme_variable_arrays.shape)
+        features_variable_arrays = np.zeros(shape=(len(features), len(time_array)))
+        print('here', features_variable_arrays.shape)
 
         for i, time in enumerate(time_array):
             for phoneme in self.phone_info:
+
                 if phoneme[0] <= time < phoneme[1]:
 
                     index = phone_extract.get_phoneme_index(phone_data, phoneme[2])
@@ -112,3 +125,42 @@ class PhoneInfo:
             plt.legend(loc='right')
             plt.title("phonetic features")
         plt.show()
+
+    def resample_phonemes_features(self, desired_freq, sampling_rate):
+        temp_phonemes = []
+        for phoneme in self.phoneme_array:
+            length = int( phoneme.size * desired_freq / sampling_rate)
+            resample = signal.resample(phoneme, length)
+            new_phoneme = resample
+            temp_phonemes.append(new_phoneme)
+
+        self.phoneme_array = None
+        self.phoneme_array = np.asarray(temp_phonemes)
+
+        temp_features = []
+        for feature in self.features_array:
+            length = int(feature.size * desired_freq / sampling_rate)
+            resample = signal.resample(feature, length)
+            new_feature = resample
+            temp_features.append(new_feature)
+
+        self.features_array = None
+        self.features_array = np.asarray(temp_features)
+
+if __name__ == '__main__':
+    phonetic_data = PhoneData()
+    phonetic_data, features = phonetic_data.extract_json()
+
+    low_trim = 1.28
+    high_trim = 15.36
+    trial = f'trials/sense_sentence_block_0'
+    recording = f'{trial}.wav'
+    sampling_rate, signal_data = wav.read(recording)
+    signal_data = signal_data[int(low_trim * sampling_rate): int(high_trim * sampling_rate)]
+    time_array = np.arange(0, len(signal_data)) / sampling_rate
+    phoneme_and_feature = PhoneInfo()
+    phoneme_and_feature.phoneme_information(f'trials/sense_sentence_block_0.json')
+    phoneme_and_feature.calculate_var_array(time_array, phonetic_data, features)
+    phoneme_and_feature.resample_phonemes_features(1000, sampling_rate)
+    print(phoneme_and_feature.features_array.shape)
+

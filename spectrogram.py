@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from scipy import signal
 from scipy import fftpack as fft
 from envelope import Envelope
+from scipy import stats
 import os
 
 
@@ -126,12 +127,40 @@ class Spectrogram:
 
         self.envelopes = np.asarray(envelopes)
 
+    def normalise_spec(self):
+        """normalises each envelope in the spectrogram between 0 and 1. It does not change the values associated with
+        the spectrogram class object
+
+        variables:
+        normalised envelopes: spectrogram containing the normalised envelopes at each frequency band
+        minimum: minimum value found in the envelope
+        maximum: maximum value found in the envelope
+
+        retruns the spectrogram as an np.array of normalised envelopes
+                """
+
+        normalised_envelopes = []
+        # for ind, envelope in enumerate(self.envelopes):
+        #
+        #     minimum = np.amin(envelope)
+        #     maximum = np.amax(envelope)
+        #     normalised_envelope = np.array(envelope, copy=True)
+        #
+        #     for index, point in enumerate(normalised_envelope):
+        #         x = (point - minimum) / (maximum - minimum)
+        #         normalised_envelope[index] = x
+        #     normalised_envelopes.append(normalised_envelope)
+        for envelope in self.envelopes:
+            normalised_envelope = stats.zscore(envelope)
+            normalised_envelopes.append(normalised_envelope)
+
+        return np.asarray(normalised_envelopes)
+
     def plot_envelopes(self, time):
         """plots the envelopes at each frequency range produced by the hilbert transform
         """
 
         for i, envelope in enumerate(self.envelopes):
-            print('here')
             plt.plot(time, envelope, 'r', label='broadband amplitude envelope')
             plt.plot(time, self.bandpass_signals[i], label='raw signal')
             plt.ylabel('Amplitude')
@@ -142,45 +171,45 @@ class Spectrogram:
     def plot_spectrogram(self, time):
         """decimate is used to downsample the signals. Plots the heat map which represents the spectrogram
         """
-
-        # envelope_array = np.asarray(self.envelopes)
-        e = signal.decimate(self.envelopes, 10, axis=1, zero_phase=True)
-        e = signal.decimate(e, 10, axis=1, zero_phase=True)
-        e = signal.decimate(e, 10, axis=1, zero_phase=True)
-        e = signal.decimate(e, 10, axis=1, zero_phase=True)
-        plot = plt.imshow(e, cmap='hot', interpolation='nearest', extent=[0, time[-1], 15, 0])
+        plot = plt.imshow(self.envelopes, cmap='hot', interpolation='nearest', extent=[0, time[-1], 15, 0])
         ax = plot.axes
         ax.invert_yaxis()
         plt.xlabel('time (s)')
         plt.colorbar(plot)
         plt.show()
 
-    def downsample_spec(self, sampling_rate):
-        new_freq = 1000
+    def downsample_spec(self, old_freq, new_freq):
+        """downsamples all envelopes in the spectrogram to a new sample rate
+        """
+
         temp_envs = []
-        for env in self.envelopes:
-            length = int(env.size * new_freq / sampling_rate)
-            resample = signal.resample(env, length)
-            temp_envs.append(resample)
+        for envelope in self.envelopes:
+            length = int(envelope.size * new_freq / old_freq)
+            resample = signal.resample(envelope, length)
+            envelope = resample
+            temp_envs.append(envelope)
 
         self.envelopes = np.asarray(temp_envs)
 
 
 
 if __name__ == '__main__':
-    path = os.path.dirname(os.path.abspath(__file__)) + '/test'
-    recording = os.path.join(path, 'test1.wav')
-
-
-
-    sampling_rate, data = wav.read(recording)
-    time_array = np.arange(0, len(data)) / sampling_rate
-
+    trial = f'trials/sense_sentence_block_1'
+    recording = f'{trial}.wav'
+    sampling_rate, signal_data = wav.read(recording)
+    time_array = np.arange(0, len(signal_data)) / sampling_rate
     spectrogram = Spectrogram()
     spectrogram.calculate_frequency_bands()
-    spectrogram.bandpass(data, sampling_rate)
-    print('here')
+    spectrogram.bandpass(signal_data, sampling_rate)
     # spectrogram.filtered_signals_plot(time_array, sampling_rate)
     spectrogram.hilbert_transform()
-    spectrogram.plot_envelopes(time_array)
+    # spectrogram.plot_envelopes(time_array)
     spectrogram.plot_spectrogram(time_array)
+    print(spectrogram.envelopes[0].size)
+    spectrogram.downsample_spec(sampling_rate, 1000)
+    print(spectrogram.envelopes[0].size)
+    time_array = np.arange(0, spectrogram.envelopes[0].size) / 1000
+    spectrogram.plot_spectrogram(time_array)
+    print(max(spectrogram.normalise_spec()[0]))
+    print(min(spectrogram.normalise_spec()[0]))
+    print(max(spectrogram.envelopes[0]))

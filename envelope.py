@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.io.wavfile as wav
 from scipy import signal
+from scipy import stats
 import matplotlib.pyplot as plt
 
 
@@ -19,7 +20,6 @@ class Envelope:
 
         if no hilbert transform computed throws type error as broadband_envelope remains None
         """
-
         analytic_signal = signal.hilbert(audio_signal)
         self.envelope = np.abs(analytic_signal)
 
@@ -34,8 +34,8 @@ class Envelope:
         time = time array corresponding to data
         """
 
-        plt.plot(time, self.envelope, 'r', label='signal envelope')
-        # plt.plot(time, audio_signal, label='raw signal')
+        # plt.plot(time, self.envelope, 'r', label='signal envelope')
+        plt.plot(time, audio_signal, label='raw signal')
         plt.ylabel('Amplitude')
         plt.xlabel('time (s)')
         plt.legend()
@@ -48,17 +48,33 @@ class Envelope:
         return self.envelope
 
     def normalise_envelope(self):
-        minimum = np.amin(self.envelope)
-        maximum = np.amax(self.envelope)
-        normalised_envelope = np.array(self.envelope, copy=True)
+        """normalises the envelope (0 -1). required for regression
 
-        for index, point in enumerate(normalised_envelope):
-            x = (point-minimum) / (maximum-minimum)
-            normalised_envelope[index] = x
+        variables:
+        minimum: minimum value found in the envelope
+        maximum: maximum value found in the envelope
+        normalised_envelope: stimulus envelope normalised between 1 and 0
+
+        returns the normalised envelope as an np.array. does not change the envelope stored within the class
+        """
+        # minimum = np.amin(self.envelope)
+        # maximum = np.amax(self.envelope)
+        # normalised_envelope = np.array(self.envelope, copy=True)
+        #
+        # for index, point in enumerate(normalised_envelope):
+        #     x = (point-minimum) / (maximum-minimum)
+        #     normalised_envelope[index] = x
+        normalised_envelope = stats.zscore(self.envelope)
         return normalised_envelope
 
-    def downsample_envelope(self, old_freq):
-        new_freq = 1000
+    def downsample_envelope(self, old_freq, new_freq):
+        """changes the envelope sampling rate
+
+        arguments and variables:
+        old_freq: current sampling rate
+        new_freq: new sampling rate
+        length: size of new envelope
+        """
         length = int(self.envelope.size * new_freq / old_freq)
         resample = signal.resample(self.envelope, length)
         self.envelope = resample
@@ -72,4 +88,8 @@ if __name__ == '__main__':
     envelope = Envelope()
     envelope.calculate_envelope(signal_data)
     print(envelope.normalise_envelope().size)
-    envelope.downsample_envelope(sampling_rate)
+    e = envelope.normalise_envelope()
+    np.arange(0, stop=1000)
+    envelope.plot_envelope(e, time_array)
+    envelope.downsample_envelope(sampling_rate, 1000)
+    print(envelope.envelope.size)

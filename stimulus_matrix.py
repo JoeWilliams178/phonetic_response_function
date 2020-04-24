@@ -6,9 +6,10 @@ from phonetic_data import PhoneData
 from phonemes_and_features import PhoneInfo
 from numpy.linalg import inv
 
+
 class StimMatrix:
 
-    def create_minmax_matrix(self, stimulus, sample_rate, first_sample):
+    def create_minmax_matrix(self, stimulus, sample_rate, minimum, maximum):
         """creates time lagged matrix, with each row associated with the time window influencing response at time t.
         for multi-variable matrices multiple rows will contain information corresponding to the same response time.
         the window is derived from two time points which are earlier than the current time point.
@@ -30,12 +31,10 @@ class StimMatrix:
         """
 
         variables = stimulus.shape[0]
-        minimum = 100
-        maximum = 400
 
         minimum = int((minimum/1000) * sample_rate)
         maximum = int((maximum/1000) * sample_rate)
-        start = int(first_sample * sample_rate)
+        start = maximum
 
         lag = (start - minimum) - (start - maximum) + 1
 
@@ -45,18 +44,16 @@ class StimMatrix:
         count = 0
 
         while count < matrix.shape[0]:
-
             new_count = count + variables
             rows = stimulus[:, start - minimum: - minimum]
             matrix[count: new_count] = rows
             minimum += 1
             count = new_count
 
-        print(matrix.shape)
         return matrix
 
 
-    def create_single_lag_matrix(self, stimulus, sample_rate, first_sample):
+    def create_single_lag_matrix(self, stimulus, sample_rate, lag_point):
         """creates time lagged matrix, with each row associated with the time window influencing response at time t.
         for multi-variable matrices multiple rows will contain information corresponding to the same response time.
         the window derived from all times before the current time point to the specified distance back
@@ -76,15 +73,69 @@ class StimMatrix:
         the time lagged stimulus matrix
         """
         variables = stimulus.shape[0]
-        lag_point = 200
-        lag_point = int((lag_point/1000) * sample_rate)
+        lag_point = int((lag_point / 1000) * sample_rate)
         lag = lag_point + 1
-        start = int(first_sample * sample_rate)
+        start = lag_point
 
         time = stimulus[0][start:].size
-        matrix = np.zeros(shape=(lag, time))
+
+
+        matrix = np.zeros(shape=(lag * variables, time))
 
         lag_step = 0
+
+        count = 0
+        # first_loop = True
+        # while count < matrix.shape[0]:
+        #     for variable in range(0, variables):
+        #         if first_loop is True:
+        #             row = stimulus[variable, start:]
+        #         else:
+        #             row = stimulus[variable, start - lag_step:-lag_step]
+        #
+        #         matrix[count, :] = row
+        #         count += 1
+        #     first_loop = False
+        #     lag_step += 1
+        # return matrix
+
+
+        # for variable in range(0, variables):
+        #     count = 0
+        #     lag_step = 0
+        #
+        #     while count < lag:
+        #         if count == 0:
+        #             row = stimulus[variable, start:]
+        #             matrix[(count + variable), :] = row
+        #             prev_ind = count + variable
+        #
+        #         else:
+        #             row = stimulus[variable, start - lag_step:-lag_step]
+        #             matrix[(prev_ind + variables), :] = row
+        #             prev_ind = prev_ind + variables
+        #         count += 1
+        #         lag_step += 1
+        # return matrix
+
+
+        # for variable in range (0, variables):
+        #     var_mat = np.zeros(shape=(lag, time))
+        #     while count < var_mat.shape[0]:
+        #         new_count = count + 1
+        #         if count == 0:
+        #             rows = stimulus[variable, start:]
+        #         else:
+        #             rows = stimulus[variable, start - lag_step:-lag_step]
+        #         var_mat[count] = rows
+        #         lag_step += 1
+        #         count = new_count
+        #     matrix[1] = var_mat
+        #     del var_mat
+        #
+        #     return matrix
+
+
 
         count = 0
         while count < matrix.shape[0]:
@@ -99,93 +150,63 @@ class StimMatrix:
 
         return matrix
 
-    def smoothing_matrix(self, dimension):
-        """matrix created from the stimulus identity matrix. Meant to add bias to surrounding data points
 
-        arguments and variables:
-        dimension: the size of the matrix
-        identity: the modified identity matrix
-        indexes: tuples holding coordinates of the elements in the matrix with a value of 2
-        arr_up: column locations one to the right of elements with a value of 2
-        arr_down: column locations one to the left of elements with a value of 2
-
-        returns:
-        the modified smoothing matrix
-        """
-
-        identity = np.identity(dimension)
-        identity[identity != 0] = 2
-        identity[0][0], identity[-1][-1] = 1, 1
-        identity[0][1], identity[-1][-2] = -1, -1
-        indexes = np.where(identity == 2)
-        arr_up = indexes[1] + 1
-        arr_down = indexes[1] - 1
-        identity[indexes[0], arr_up] = -1
-        identity[indexes[0], arr_down] = -1
-
-        return identity
-
-
-
-    def get_stimulus(self, stimulus, requested_sample_rate, first_sample):
+def get_stimulus(self, stimulus, requested_sample_rate, first_sample):
         """ builds and returns the stimulus matrix and the modified identity matrix
         """
 
         stim_matrix = self.create_minmax_matrix(stimulus, requested_sample_rate, first_sample)
-        print('stim mat built')
         autocovariance = np.matmul(stim_matrix.transpose(), stim_matrix)
-        print('autoco built')
         inverse = inv(autocovariance)
-        print('inverse built')
         smoothing = self.smoothing_matrix(inverse.shape[0])
-        print('smoothing built')
 
         return stim_matrix, inverse, smoothing
 
 if __name__ == '__main__':
 
+    low_trim = 1.28
+    high_trim = 50.72
+
     trial = f'trials/sense_sentence_block_0'
     recording = f'{trial}.wav'
     sampling_rate, signal_data = wav.read(recording)
+    signal_data = signal_data[int(low_trim * sampling_rate): int(high_trim * sampling_rate)]
     time_array = np.arange(0, len(signal_data)) / sampling_rate
+    desired_freq = 1000
 
     envelope = Envelope()
     envelope.calculate_envelope(signal_data)
-
-    stimulus_matrix = StimMatrix()
-    envelope.downsample_envelope(sampling_rate)
+    print(envelope.envelope.shape)
+    envelope.downsample_envelope(sampling_rate, desired_freq)
     normalised_envelope = envelope.normalise_envelope()
-    print(type(normalised_envelope))
-    first_sample = 1.28
     normalised_envelope = np.asarray([normalised_envelope])
+    print(normalised_envelope.shape)
+    sm = StimMatrix()
+    # matrix = sm.create_minmax_matrix(normalised_envelope, 1000)
+    # print(matrix.shape)
 
-    # stim_matrix, inverse, smoothing = stimulus_matrix.get_stimulus(normalised_envelope, 1000, first_sample)
-    stimul_matrix = stimulus_matrix.create_minmax_matrix(normalised_envelope, 1000, first_sample)
-    # print(stim_matrix == stimul_matrix)
+    spectrogram = Spectrogram()
+    spectrogram.calculate_frequency_bands()
+    spectrogram.bandpass(signal_data, sampling_rate)
+    spectrogram.hilbert_transform()
+    spectrogram.downsample_spec(sampling_rate, desired_freq)
+    envelopes = spectrogram.normalise_spec()
+    # matrix = sm.create_minmax_matrix(envelopes, 1000)
+    # print(matrix.shape)
 
-    # spectrogram = Spectrogram()
-    # spectrogram.calculate_frequency_bands()
-    # spectrogram.bandpass(signal_data, sampling_rate)
-    # spectrogram.hilbert_transform()
-    # spectrogram.downsample_spec(sampling_rate)
-    #
-    # sm = StimMatrix()
-    # print(spectrogram.envelopes.shape)
-    # sm.create_minmax_matrix(spectrogram.envelopes, 1000, first_sample)
-    #¡¡
-    # phonetic_data = PhoneData()
-    # phonetic_data, features = phonetic_data.extract_json()
-    #
-    # phoneme_and_feature = PhoneInfo()
-    #
-    # time_array = np.arange(0, int(envelope.envelope.size)) / 1000
-    # phoneme_and_feature.phoneme_information(f'{trial}.json')
-    # phoneme_and_feature.calculate_var_array(time_array, phonetic_data, features)
-    #
-    # sm1 = StimMatrix()
-    # sm1.create_minmax_matrix(phoneme_and_feature.phoneme_array, 1000, first_sample)
-    # sm2 = StimMatrix()
-    # sm2.create_minmax_matrix(phoneme_and_feature.features_array, 1000, first_sample)
-    #
+
+    phonetic_data = PhoneData()
+    phonetic_data, features = phonetic_data.extract_json()
+
+    phoneme_and_feature = PhoneInfo()
+
+    time_array = np.arange(0, int(envelope.envelope.size)) / 1000
+    phoneme_and_feature.phoneme_information(f'{trial}.json')
+    phoneme_and_feature.calculate_var_array(time_array, phonetic_data, features)
+
+    # sm.create_minmax_matrix(phoneme_and_feature.phoneme_array, 1000)
+    # sm.create_minmax_matrix(phoneme_and_feature.features_array, 1000)
+    sm.create_single_lag_matrix(phoneme_and_feature.features_array, 1000, 200)
+
 
 
