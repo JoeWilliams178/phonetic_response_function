@@ -80,73 +80,17 @@ class StimMatrix:
         time = stimulus[0][start:].size
 
 
-        matrix = np.zeros(shape=(lag * variables, time))
+        matrix = np.zeros(shape=(time, lag * variables))
 
         lag_step = 0
 
         count = 0
-        # first_loop = True
-        # while count < matrix.shape[0]:
-        #     for variable in range(0, variables):
-        #         if first_loop is True:
-        #             row = stimulus[variable, start:]
-        #         else:
-        #             row = stimulus[variable, start - lag_step:-lag_step]
-        #
-        #         matrix[count, :] = row
-        #         count += 1
-        #     first_loop = False
-        #     lag_step += 1
-        # return matrix
-
-
-        # for variable in range(0, variables):
-        #     count = 0
-        #     lag_step = 0
-        #
-        #     while count < lag:
-        #         if count == 0:
-        #             row = stimulus[variable, start:]
-        #             matrix[(count + variable), :] = row
-        #             prev_ind = count + variable
-        #
-        #         else:
-        #             row = stimulus[variable, start - lag_step:-lag_step]
-        #             matrix[(prev_ind + variables), :] = row
-        #             prev_ind = prev_ind + variables
-        #         count += 1
-        #         lag_step += 1
-        # return matrix
-
-
-        # for variable in range (0, variables):
-        #     var_mat = np.zeros(shape=(lag, time))
-        #     while count < var_mat.shape[0]:
-        #         new_count = count + 1
-        #         if count == 0:
-        #             rows = stimulus[variable, start:]
-        #         else:
-        #             rows = stimulus[variable, start - lag_step:-lag_step]
-        #         var_mat[count] = rows
-        #         lag_step += 1
-        #         count = new_count
-        #     matrix[1] = var_mat
-        #     del var_mat
-        #
-        #     return matrix
-
-
-
-        count = 0
-        while count < matrix.shape[0]:
+        while count < time:
             new_count = count + variables
-            if count == 0:
-                rows = stimulus[:, start:]
-            else:
-                rows = stimulus[:, start - lag_step:-lag_step]
-            matrix[count: new_count] = rows
-            lag_step += 1
-            count = new_count
+            for variable in range(0, variables):
+                matrix[count, variable: variable + lag] = stimulus[variable, start - 200: start + 1]
+            count += 1
+            start += 1
 
         return matrix
 

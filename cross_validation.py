@@ -17,6 +17,7 @@ class CrossVal:
         averaged_lambda_errors: averaged r and mse for each ridge parameter after cross-validation
         """
         self.data = None
+        self.inverse = np.zeros(shape=(29, 9), dtype=np.ndarray)
         self.lambda_errors = np.zeros(shape=29, dtype=np.ndarray)
         self.averaged_lambda_errors = np.zeros(shape=9, dtype=np.ndarray)
         self.electrodes = None
@@ -34,11 +35,11 @@ class CrossVal:
         # env_matrix = sm.construct_phoneme_features_matrix('sense', 29, time_array, sampling_rate, desired_freq,
         #                                              lag_min, lag_max)
 
-        env_matrix = sm.construct_envelope_matrix(signal_data, time_array, sampling_rate,
+        env_matrix = sm.construct_spectrogram_matrix(signal_data, time_array, sampling_rate,
                                                         desired_freq,
                                                         lag_min, lag_max)
 
-        prediction = np.matmul(env_matrix.transpose(), average_trf)
+        prediction = np.matmul(env_matrix, average_trf)
         actual = self.data[ppt][trial]
         error = self.calculate_rank_error(prediction, actual)
         return error
@@ -151,11 +152,11 @@ class CrossVal:
             sampling_rate, signal_data, time_array = self.read_stimulus(condition, trial)
             # env_matrix = sm.construct_phoneme_features_matrix('sense', trial, time_array, sampling_rate, desired_freq,
             #                                              lag_min, lag_max)
-            env_matrix = sm.construct_envelope_matrix(signal_data, time_array, sampling_rate,
+            env_matrix = sm.construct_spectrogram_matrix(signal_data, time_array, sampling_rate,
                                                                     desired_freq,
                                                                     lag_min, lag_max)
 
-            predicted_response = np.matmul(env_matrix.transpose(), prediction)
+            predicted_response = np.matmul(env_matrix, prediction)
             del env_matrix
             del sampling_rate
             del signal_data
@@ -198,7 +199,7 @@ class CrossVal:
 
         return identity
 
-    def trial_parameter(self, autocovariance, stimulus_response, ridge_parameters):
+    def trial_parameter(self, ppt, trial, autocovariance, stimulus_response, ridge_parameters):
         """for a single trial and participant. Calculates trf values for all of the different ridge values being
          assessed. This is calculated for each electrode.
 
@@ -216,13 +217,16 @@ class CrossVal:
         """
         identity = self.smoothing_matrix(autocovariance.shape[0])
         trfs = np.zeros(shape=len(ridge_parameters), dtype=np.ndarray)
+
         for index, rp in enumerate(ridge_parameters):
-            ridge = rp * identity
-
-            ridge = autocovariance + ridge
-            ridge = inv(ridge)
+            if ppt == 0:
+                ridge = rp * identity
+                ridge = autocovariance + ridge
+                ridge = inv(ridge)
+                self.inverse[trial, index] = ridge
+            else:
+                ridge = self.inverse[trial, index]
             trf = np.matmul(ridge, stimulus_response)
-
             trfs[index] = trf
         return trfs
 
@@ -281,11 +285,10 @@ if __name__ == '__main__':
             else:
                 # cross.lambda_errors = np.zeros(shape=29, dtype=np.ndarray)
                 # cross.averaged_lambda_errors = np.zeros(shape=9, dtype=np.ndarray)
-                print(ppt)
                 cross_val_trials = trials - 1
                 trial_trf = np.zeros(shape=(len(ridge_parameters), cross_val_trials), dtype=np.ndarray)
                 for trial in range(0, trials - 1):
-                    print(trial)
+                    print(ppt, trial)
                     ppt_trial_data = cross.data[ppt][trial]
 
                     sampling_rate, signal_data, time_array = cross.read_stimulus(condition, trial)
@@ -293,30 +296,29 @@ if __name__ == '__main__':
                     # env_matrix = stim_mat.construct_phoneme_features_matrix(condition, trial, time_array, sampling_rate,
                     #                                                    desired_freq,
                     #                                                    lag_min, lag_max)
-                    env_matrix = stim_mat.construct_envelope_matrix(signal_data, time_array, sampling_rate,
+                    env_matrix = stim_mat.construct_spectrogram_matrix(signal_data, time_array, sampling_rate,
                                                                     desired_freq,
                                                                     lag_min, lag_max)
 
-                    autocovariance = np.matmul(env_matrix, env_matrix.transpose())
-                    s_t_r = np.matmul(env_matrix, ppt_trial_data)
+                    autocovariance = np.matmul(env_matrix.transpose(), env_matrix)
+                    print(ppt_trial_data.shape)
+                    print(env_matrix.transpose().shape)
+                    s_t_r = np.matmul(env_matrix.transpose(), ppt_trial_data)
                     del env_matrix
                     del sampling_rate
                     del signal_data
                     del time_array
                     del stim_mat
-                    cross_val_trfs = cross.trial_parameter(autocovariance, s_t_r, ridge_parameters)
+                    cross_val_trfs = cross.trial_parameter(ppt, trial, autocovariance, s_t_r, ridge_parameters)
                     trial_trf[:, trial] = cross_val_trfs
 
-                print('finished trial cycle')
                 initial_prediction_value, initial_lambda_index = 0, 0
                 first_test_index = trials - 2
                 cross.build_prediction(ppt, trial_trf, first_test_index, initial_prediction_value, initial_lambda_index,
                                        condition)
-                print('finished build')
                 final_lambda = cross.optimal_lambda()
                 final_trial = trials - 1
                 check.append(trial_trf[int(final_lambda), :])
                 r_values = cross.final_model(trial_trf[int(final_lambda), :], desired_freq, lag_min, lag_max, ppt,
                                              final_trial)
-                print('r tests')
                 interpretation.r_averages(r_values, condition, ppt)

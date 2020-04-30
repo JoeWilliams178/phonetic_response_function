@@ -76,9 +76,7 @@ class PhoneInfo:
 
 
         phoneme_variable_arrays = np.zeros(shape=(len(phone_data), len(time_array)))
-        print('here',phoneme_variable_arrays.shape)
         features_variable_arrays = np.zeros(shape=(len(features), len(time_array)))
-        print('here', features_variable_arrays.shape)
 
         for i, time in enumerate(time_array):
             for phoneme in self.phone_info:
